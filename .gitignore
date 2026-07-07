@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+*.log
+
+# WhatsApp session files (futuro)
+.wwebjs_auth/
+.wwebjs_cache/
+sessions/
