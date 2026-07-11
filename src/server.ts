@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import { config } from "./infra/config.js";
 import { authRoutes } from "./auth/routes.js";
 import { createAIRoutes } from "./ai/routes.js";
+import { createKnowledgeRoutes } from "./knowledge/routes.js";
 import { VertexProvider } from "./ai/vertex-provider.js";
 
 const app = Fastify({ logger: true });
@@ -19,6 +20,7 @@ async function start() {
 
     const aiProvider = new VertexProvider();
     await app.register(createAIRoutes(aiProvider));
+    await app.register(createKnowledgeRoutes(aiProvider));
 
     await app.listen({ port: config.port, host: "0.0.0.0" });
   } catch (err) {

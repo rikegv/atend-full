@@ -3,6 +3,7 @@ import { useAuth } from "./lib/auth-context";
 import AppLayout from "./layout/AppLayout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
+import KnowledgeBasePage from "./pages/KnowledgeBasePage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -50,6 +51,7 @@ export default function App() {
         }
       >
         <Route index element={<DashboardPage />} />
+        <Route path="base" element={<KnowledgeBasePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

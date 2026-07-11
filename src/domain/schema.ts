@@ -124,6 +124,19 @@ export const messages = pgTable("messages", {
   timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow().notNull(),
 });
 
+// ── Knowledge Item (item editável da base de conhecimento) ────
+
+export const knowledgeItems = pgTable("knowledge_item", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id),
+  tipo: knowledgeChunkTypeEnum("tipo").notNull(),
+  data: jsonb("data").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // ── Knowledge Chunk (base de conhecimento para RAG) ───────────
 
 export const knowledgeChunks = pgTable("knowledge_chunk", {

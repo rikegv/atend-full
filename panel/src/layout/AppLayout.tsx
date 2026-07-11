@@ -1,15 +1,22 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
-import { LayoutDashboard, LogOut } from "lucide-react";
+import { LayoutDashboard, BookOpen, LogOut } from "lucide-react";
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const location = useLocation();
+
   function handleLogout() {
     logout();
     navigate("/login", { replace: true });
   }
+
+  const navItems = [
+    { to: "/", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/base", label: "Base de Conhecimento", icon: BookOpen },
+  ];
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -28,14 +35,24 @@ export default function AppLayout() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4">
-          <button
-            type="button"
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-sidebar-text)] bg-white/[0.06] cursor-default"
-          >
-            <LayoutDashboard size={18} className="opacity-70" />
-            Dashboard
-          </button>
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {navItems.map(({ to, label, icon: Icon }) => {
+            const active = location.pathname === to;
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ${
+                  active
+                    ? "text-[var(--color-sidebar-text)] bg-white/[0.06]"
+                    : "text-[var(--color-sidebar-text-muted)] hover:text-[var(--color-sidebar-text)] hover:bg-white/[0.04]"
+                }`}
+              >
+                <Icon size={18} className="opacity-70" />
+                {label}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Footer / user */}
