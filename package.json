@@ -6,19 +6,34 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx src/infra/seed.ts",
+    "test": "tsx --test src/channel/__tests__/echo.test.ts",
+    "test:ai": "tsx --test src/ai/__tests__/engine.test.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@fastify/cors": "^11.2.0",
     "@fastify/env": "^7.0.0",
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
-    "fastify": "^5.10.0"
+    "drizzle-orm": "^0.45.2",
+    "fastify": "^5.10.0",
+    "google-auth-library": "^9.15.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.22.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.1.0",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.23.0",
     "typescript": "^6.0.3"
   }

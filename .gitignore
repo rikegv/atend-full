@@ -7,3 +7,5 @@ dist/
 .wwebjs_auth/
 .wwebjs_cache/
 sessions/
+
+vertex-credentials.json
