@@ -29,6 +29,13 @@
       "when": 1783787862907,
       "tag": "0003_fearless_crystal",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783802364522,
+      "tag": "0004_faulty_junta",
+      "breakpoints": true
     }
   ]
 }

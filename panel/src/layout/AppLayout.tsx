@@ -1,12 +1,34 @@
+import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
-import { LayoutDashboard, BookOpen, LogOut } from "lucide-react";
+import { useTenantContext, type TenantOption } from "../lib/tenant-context";
+import { listTenants } from "../lib/admin-api";
+import {
+  LayoutDashboard,
+  BookOpen,
+  Building2,
+  LogOut,
+  ChevronDown,
+} from "lucide-react";
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-
   const location = useLocation();
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
+  const { selectedTenant, selectTenant } = useTenantContext();
+
+  const [tenantOptions, setTenantOptions] = useState<TenantOption[]>([]);
+  const [selectorOpen, setSelectorOpen] = useState(false);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      listTenants().then((list) => {
+        const active = list.filter((t) => t.active);
+        setTenantOptions(active);
+      });
+    }
+  }, [isSuperAdmin]);
 
   function handleLogout() {
     logout();
@@ -14,8 +36,11 @@ export default function AppLayout() {
   }
 
   const navItems = [
-    { to: "/", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/base", label: "Base de Conhecimento", icon: BookOpen },
+    { to: "/", label: "Dashboard", icon: LayoutDashboard, superOnly: false },
+    ...(isSuperAdmin
+      ? [{ to: "/academias", label: "Academias", icon: Building2, superOnly: true }]
+      : []),
+    { to: "/base", label: "Base de Conhecimento", icon: BookOpen, superOnly: false },
   ];
 
   return (
@@ -33,6 +58,56 @@ export default function AppLayout() {
             </span>
           </div>
         </div>
+
+        {/* Tenant selector (SUPER_ADMIN only) */}
+        {isSuperAdmin && (
+          <div className="px-3 pt-4 pb-2">
+            <p className="px-3 mb-1.5 text-[10px] font-medium text-[var(--color-sidebar-text-muted)] uppercase tracking-widest">
+              Contexto
+            </p>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setSelectorOpen(!selectorOpen)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-[var(--color-sidebar-text)] bg-white/[0.06] hover:bg-white/[0.10] transition-colors cursor-pointer"
+              >
+                <span className="truncate text-left">
+                  {selectedTenant ? selectedTenant.name : "Selecionar academia"}
+                </span>
+                <ChevronDown
+                  size={14}
+                  className={`shrink-0 opacity-50 transition-transform ${selectorOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {selectorOpen && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[var(--color-sidebar-bg)] border border-white/10 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                  {tenantOptions.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => {
+                        selectTenant(t);
+                        setSelectorOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-white/[0.06] cursor-pointer ${
+                        selectedTenant?.id === t.id
+                          ? "text-[var(--color-sidebar-text)] bg-white/[0.04]"
+                          : "text-[var(--color-sidebar-text-muted)]"
+                      }`}
+                    >
+                      {t.name}
+                    </button>
+                  ))}
+                  {tenantOptions.length === 0 && (
+                    <p className="px-3 py-2 text-xs text-[var(--color-sidebar-text-muted)]">
+                      Nenhuma academia ativa
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1">

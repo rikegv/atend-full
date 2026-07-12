@@ -1,10 +1,12 @@
 const API_BASE = "/api";
 
+export type UserRole = "SUPER_ADMIN" | "TENANT_ADMIN" | "ATENDENTE";
+
 export interface AuthUser {
   userId: string;
   email: string;
   name: string;
-  role: "SUPER_ADMIN" | "TENANT_ADMIN";
+  role: UserRole;
   tenantId: string | null;
   tenantName: string | null;
 }

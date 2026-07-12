@@ -46,11 +46,20 @@ export function createKnowledgeRoutes(provider: AIProvider) {
   return async function knowledgeRoutes(app: FastifyInstance) {
     app.addHook("preHandler", requireAuth);
 
+    function resolveTenantId(req: import("fastify").FastifyRequest): string | null {
+      const user = req.user!;
+      if (user.role === "SUPER_ADMIN") {
+        const query = req.query as { tenantId?: string };
+        return query.tenantId || null;
+      }
+      return user.tenantId;
+    }
+
     // ── Listar por tipo ──
     app.get("/api/knowledge/:tipo", async (req, reply) => {
-      const user = req.user!;
-      if (!user.tenantId) {
-        return reply.status(400).send({ error: "Usuário sem tenant vinculado" });
+      const tenantId = resolveTenantId(req);
+      if (!tenantId) {
+        return reply.status(400).send({ error: "Tenant não especificado" });
       }
 
       const { tipo } = req.params as { tipo: Tipo };
@@ -59,7 +68,7 @@ export function createKnowledgeRoutes(provider: AIProvider) {
         .from(knowledgeItems)
         .where(
           and(
-            eq(knowledgeItems.tenantId, user.tenantId),
+            eq(knowledgeItems.tenantId, tenantId),
             eq(knowledgeItems.tipo, tipo),
           ),
         )
@@ -70,9 +79,9 @@ export function createKnowledgeRoutes(provider: AIProvider) {
 
     // ── Criar item ──
     app.post("/api/knowledge/:tipo", async (req, reply) => {
-      const user = req.user!;
-      if (!user.tenantId) {
-        return reply.status(400).send({ error: "Usuário sem tenant vinculado" });
+      const tenantId = resolveTenantId(req);
+      if (!tenantId) {
+        return reply.status(400).send({ error: "Tenant não especificado" });
       }
 
       const { tipo } = req.params as { tipo: Tipo };
@@ -85,7 +94,7 @@ export function createKnowledgeRoutes(provider: AIProvider) {
           .from(knowledgeItems)
           .where(
             and(
-              eq(knowledgeItems.tenantId, user.tenantId),
+              eq(knowledgeItems.tenantId, tenantId),
               eq(knowledgeItems.tipo, "tom"),
             ),
           )
@@ -100,20 +109,20 @@ export function createKnowledgeRoutes(provider: AIProvider) {
 
       const [item] = await db
         .insert(knowledgeItems)
-        .values({ tenantId: user.tenantId, tipo, data })
+        .values({ tenantId, tipo, data })
         .returning();
 
       const text = composeText(tipo, data);
-      await ingestContent(provider, user.tenantId, tipo, text, item!.id);
+      await ingestContent(provider, tenantId, tipo, text, item!.id);
 
       return reply.status(201).send(item);
     });
 
     // ── Editar item ──
     app.put("/api/knowledge/:tipo/:id", async (req, reply) => {
-      const user = req.user!;
-      if (!user.tenantId) {
-        return reply.status(400).send({ error: "Usuário sem tenant vinculado" });
+      const tenantId = resolveTenantId(req);
+      if (!tenantId) {
+        return reply.status(400).send({ error: "Tenant não especificado" });
       }
 
       const { tipo, id } = req.params as { tipo: Tipo; id: string };
@@ -125,7 +134,7 @@ export function createKnowledgeRoutes(provider: AIProvider) {
         .where(
           and(
             eq(knowledgeItems.id, id),
-            eq(knowledgeItems.tenantId, user.tenantId),
+            eq(knowledgeItems.tenantId, tenantId),
           ),
         )
         .limit(1);
@@ -141,16 +150,16 @@ export function createKnowledgeRoutes(provider: AIProvider) {
         .returning();
 
       const text = composeText(tipo, data);
-      await reindexContent(provider, user.tenantId, id, tipo, text);
+      await reindexContent(provider, tenantId, id, tipo, text);
 
       return updated;
     });
 
     // ── Excluir item ──
     app.delete("/api/knowledge/:tipo/:id", async (req, reply) => {
-      const user = req.user!;
-      if (!user.tenantId) {
-        return reply.status(400).send({ error: "Usuário sem tenant vinculado" });
+      const tenantId = resolveTenantId(req);
+      if (!tenantId) {
+        return reply.status(400).send({ error: "Tenant não especificado" });
       }
 
       const { id } = req.params as { tipo: Tipo; id: string };
@@ -161,7 +170,7 @@ export function createKnowledgeRoutes(provider: AIProvider) {
         .where(
           and(
             eq(knowledgeItems.id, id),
-            eq(knowledgeItems.tenantId, user.tenantId),
+            eq(knowledgeItems.tenantId, tenantId),
           ),
         )
         .limit(1);
@@ -173,7 +182,7 @@ export function createKnowledgeRoutes(provider: AIProvider) {
       // Remover chunks associados
       await pool.query(
         "DELETE FROM knowledge_chunk WHERE tenant_id = $1 AND origem_id = $2",
-        [user.tenantId, id],
+        [tenantId, id],
       );
 
       await db

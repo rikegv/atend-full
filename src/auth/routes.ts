@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../infra/db.js";
 import { users, tenants } from "../domain/schema.js";
 import { config } from "../infra/config.js";
-import { requireAuth, enforceTenantIsolation, type AuthPayload } from "./middleware.js";
+import { requireAuth, enforceTenantIsolation, type AuthPayload, type UserRole } from "./middleware.js";
 
 export async function authRoutes(app: FastifyInstance) {
   app.post("/api/auth/login", async (req, reply) => {
@@ -38,10 +38,17 @@ export async function authRoutes(app: FastifyInstance) {
     let tenantName: string | null = null;
     if (user.tenantId) {
       const [t] = await db
-        .select({ name: tenants.name })
+        .select({ name: tenants.name, active: tenants.active })
         .from(tenants)
         .where(eq(tenants.id, user.tenantId))
         .limit(1);
+
+      if (t && !t.active) {
+        return reply
+          .status(403)
+          .send({ error: "Academia inativa. Entre em contato com o suporte." });
+      }
+
       tenantName = t?.name ?? null;
     }
 

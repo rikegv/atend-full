@@ -4,6 +4,7 @@ import AppLayout from "./layout/AppLayout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import KnowledgeBasePage from "./pages/KnowledgeBasePage";
+import AcademiasPage from "./pages/AcademiasPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -32,6 +33,14 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function SuperAdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (user?.role !== "SUPER_ADMIN") {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -52,6 +61,14 @@ export default function App() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="base" element={<KnowledgeBasePage />} />
+        <Route
+          path="academias"
+          element={
+            <SuperAdminRoute>
+              <AcademiasPage />
+            </SuperAdminRoute>
+          }
+        />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

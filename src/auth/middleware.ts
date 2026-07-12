@@ -2,11 +2,13 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import jwt from "jsonwebtoken";
 import { config } from "../infra/config.js";
 
+export type UserRole = "SUPER_ADMIN" | "TENANT_ADMIN" | "ATENDENTE";
+
 export interface AuthPayload {
   userId: string;
   email: string;
   name: string;
-  role: "SUPER_ADMIN" | "TENANT_ADMIN";
+  role: UserRole;
   tenantId: string | null;
 }
 
@@ -31,17 +33,13 @@ export async function requireAuth(req: FastifyRequest, reply: FastifyReply) {
   }
 }
 
-export async function requireRole(
-  role: "SUPER_ADMIN" | "TENANT_ADMIN",
-) {
-  return async function (req: FastifyRequest, reply: FastifyReply) {
-    if (!req.user) {
-      return reply.status(401).send({ error: "Não autenticado" });
-    }
-    if (req.user.role !== role && req.user.role !== "SUPER_ADMIN") {
-      return reply.status(403).send({ error: "Acesso negado" });
-    }
-  };
+export async function requireSuperAdmin(req: FastifyRequest, reply: FastifyReply) {
+  if (!req.user) {
+    return reply.status(401).send({ error: "Não autenticado" });
+  }
+  if (req.user.role !== "SUPER_ADMIN") {
+    return reply.status(403).send({ error: "Acesso restrito a Super Admin" });
+  }
 }
 
 export function enforceTenantIsolation(

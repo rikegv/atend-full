@@ -23,6 +23,8 @@ import {
   type RegraData,
   type TomData,
 } from "../lib/knowledge-api";
+import { useAuth } from "../lib/auth-context";
+import { useTenantContext } from "../lib/tenant-context";
 
 // ── Toast ──
 
@@ -468,6 +470,14 @@ function TomSection({
 // ── Página principal ──
 
 export default function KnowledgeBasePage() {
+  const { user } = useAuth();
+  const { selectedTenant } = useTenantContext();
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
+
+  // Para SUPER_ADMIN, usa o tenant selecionado; para TENANT_ADMIN, usa o próprio
+  const effectiveTenantId = isSuperAdmin ? selectedTenant?.id : user?.tenantId;
+  const effectiveTenantName = isSuperAdmin ? selectedTenant?.name : user?.tenantName;
+
   const [planos, setPlanos] = useState<KnowledgeItem[]>([]);
   const [faqs, setFaqs] = useState<KnowledgeItem[]>([]);
   const [regras, setRegras] = useState<KnowledgeItem[]>([]);
@@ -477,30 +487,42 @@ export default function KnowledgeBasePage() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
+    if (!effectiveTenantId) {
+      setPlanos([]);
+      setFaqs([]);
+      setRegras([]);
+      setToms([]);
+      setLoading(false);
+      return;
+    }
+    const tid = isSuperAdmin ? effectiveTenantId : undefined;
     const [p, f, r, t] = await Promise.all([
-      listItems("plano"),
-      listItems("faq"),
-      listItems("regra"),
-      listItems("tom"),
+      listItems("plano", tid),
+      listItems("faq", tid),
+      listItems("regra", tid),
+      listItems("tom", tid),
     ]);
     setPlanos(p);
     setFaqs(f);
     setRegras(r);
     setToms(t);
     setLoading(false);
-  }, []);
+  }, [effectiveTenantId, isSuperAdmin]);
 
   useEffect(() => {
+    setLoading(true);
     load();
   }, [load]);
+
+  const tid = isSuperAdmin ? effectiveTenantId : undefined;
 
   async function handleSave(tipo: Tipo, data: unknown, id?: string) {
     setSaving(true);
     try {
       if (id) {
-        await updateItem(tipo, id, data as PlanoData & FaqData & RegraData & TomData);
+        await updateItem(tipo, id, data as PlanoData & FaqData & RegraData & TomData, tid);
       } else {
-        await createItem(tipo, data as PlanoData & FaqData & RegraData & TomData);
+        await createItem(tipo, data as PlanoData & FaqData & RegraData & TomData, tid);
       }
       await load();
       setToast("Base atualizada");
@@ -512,12 +534,25 @@ export default function KnowledgeBasePage() {
   async function handleDelete(tipo: Tipo, id: string) {
     setSaving(true);
     try {
-      await deleteItem(tipo, id);
+      await deleteItem(tipo, id, tid);
       await load();
       setToast("Item removido");
     } finally {
       setSaving(false);
     }
+  }
+
+  if (isSuperAdmin && !effectiveTenantId) {
+    return (
+      <div className="p-8 max-w-3xl">
+        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)] tracking-tight">
+          Base de Conhecimento
+        </h1>
+        <p className="text-sm text-[var(--color-text-muted)] mt-4">
+          Selecione uma academia no seletor de contexto da sidebar para visualizar a base de conhecimento.
+        </p>
+      </div>
+    );
   }
 
   if (loading) {
@@ -535,7 +570,9 @@ export default function KnowledgeBasePage() {
           Base de Conhecimento
         </h1>
         <p className="text-sm text-[var(--color-text-muted)] mt-1">
-          Gerencie o conteúdo que alimenta a IA do atendimento
+          {effectiveTenantName
+            ? `Conteúdo de ${effectiveTenantName}`
+            : "Gerencie o conteúdo que alimenta a IA do atendimento"}
         </p>
       </div>
 

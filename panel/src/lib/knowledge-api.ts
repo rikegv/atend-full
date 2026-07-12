@@ -38,8 +38,9 @@ function headers() {
   };
 }
 
-export async function listItems(tipo: Tipo): Promise<KnowledgeItem[]> {
-  const res = await fetch(`${API_BASE}/knowledge/${tipo}`, {
+export async function listItems(tipo: Tipo, tenantId?: string): Promise<KnowledgeItem[]> {
+  const qs = tenantId ? `?tenantId=${tenantId}` : "";
+  const res = await fetch(`${API_BASE}/knowledge/${tipo}${qs}`, {
     headers: headers(),
   });
   if (!res.ok) throw new Error("Erro ao listar itens");
@@ -49,8 +50,10 @@ export async function listItems(tipo: Tipo): Promise<KnowledgeItem[]> {
 export async function createItem(
   tipo: Tipo,
   data: ItemData,
+  tenantId?: string,
 ): Promise<KnowledgeItem> {
-  const res = await fetch(`${API_BASE}/knowledge/${tipo}`, {
+  const qs = tenantId ? `?tenantId=${tenantId}` : "";
+  const res = await fetch(`${API_BASE}/knowledge/${tipo}${qs}`, {
     method: "POST",
     headers: headers(),
     body: JSON.stringify(data),
@@ -66,8 +69,10 @@ export async function updateItem(
   tipo: Tipo,
   id: string,
   data: ItemData,
+  tenantId?: string,
 ): Promise<KnowledgeItem> {
-  const res = await fetch(`${API_BASE}/knowledge/${tipo}/${id}`, {
+  const qs = tenantId ? `?tenantId=${tenantId}` : "";
+  const res = await fetch(`${API_BASE}/knowledge/${tipo}/${id}${qs}`, {
     method: "PUT",
     headers: headers(),
     body: JSON.stringify(data),
@@ -76,8 +81,9 @@ export async function updateItem(
   return res.json();
 }
 
-export async function deleteItem(tipo: Tipo, id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/knowledge/${tipo}/${id}`, {
+export async function deleteItem(tipo: Tipo, id: string, tenantId?: string): Promise<void> {
+  const qs = tenantId ? `?tenantId=${tenantId}` : "";
+  const res = await fetch(`${API_BASE}/knowledge/${tipo}/${id}${qs}`, {
     method: "DELETE",
     headers: headers(),
   });

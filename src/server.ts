@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { config } from "./infra/config.js";
 import { authRoutes } from "./auth/routes.js";
+import { adminRoutes } from "./admin/routes.js";
 import { createAIRoutes } from "./ai/routes.js";
 import { createKnowledgeRoutes } from "./knowledge/routes.js";
 import { VertexProvider } from "./ai/vertex-provider.js";
@@ -17,6 +18,7 @@ async function start() {
     });
 
     await app.register(authRoutes);
+    await app.register(adminRoutes);
 
     const aiProvider = new VertexProvider();
     await app.register(createAIRoutes(aiProvider));

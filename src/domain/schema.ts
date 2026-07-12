@@ -15,6 +15,7 @@ import {
   jsonb,
   timestamp,
   text,
+  boolean,
   pgEnum,
   customType,
 } from "drizzle-orm/pg-core";
@@ -24,6 +25,7 @@ import {
 export const userRoleEnum = pgEnum("user_role", [
   "SUPER_ADMIN",
   "TENANT_ADMIN",
+  "ATENDENTE",
 ]);
 
 export const conversationStatusEnum = pgEnum("conversation_status", [
@@ -78,6 +80,7 @@ export const tenants = pgTable("tenants", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   config: jsonb("config").default({}).notNull(),
+  active: boolean("active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
