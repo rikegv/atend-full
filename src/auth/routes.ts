@@ -35,6 +35,12 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.status(401).send({ error: "Credenciais inválidas" });
     }
 
+    if (!user.active) {
+      return reply
+        .status(403)
+        .send({ error: "Conta inativa. Entre em contato com o administrador." });
+    }
+
     let tenantName: string | null = null;
     if (user.tenantId) {
       const [t] = await db

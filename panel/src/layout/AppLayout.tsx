@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Building2,
+  Users,
   LogOut,
   ChevronDown,
 } from "lucide-react";
@@ -16,6 +17,8 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
+  const isTenantAdmin = user?.role === "TENANT_ADMIN";
+  const isAtendente = user?.role === "ATENDENTE";
   const { selectedTenant, selectTenant } = useTenantContext();
 
   const [tenantOptions, setTenantOptions] = useState<TenantOption[]>([]);
@@ -35,13 +38,18 @@ export default function AppLayout() {
     navigate("/login", { replace: true });
   }
 
-  const navItems = [
-    { to: "/", label: "Dashboard", icon: LayoutDashboard, superOnly: false },
-    ...(isSuperAdmin
-      ? [{ to: "/academias", label: "Academias", icon: Building2, superOnly: true }]
-      : []),
-    { to: "/base", label: "Base de Conhecimento", icon: BookOpen, superOnly: false },
-  ];
+  const navItems = isAtendente
+    ? [{ to: "/", label: "Início", icon: LayoutDashboard }]
+    : [
+        { to: "/", label: "Dashboard", icon: LayoutDashboard },
+        ...(isSuperAdmin
+          ? [{ to: "/academias", label: "Academias", icon: Building2 }]
+          : []),
+        ...(isTenantAdmin
+          ? [{ to: "/equipe", label: "Equipe", icon: Users }]
+          : []),
+        { to: "/base", label: "Base de Conhecimento", icon: BookOpen },
+      ];
 
   return (
     <div className="flex h-screen overflow-hidden">

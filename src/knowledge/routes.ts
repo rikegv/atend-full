@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { eq, and } from "drizzle-orm";
 import { db } from "../infra/db.js";
 import { knowledgeItems } from "../domain/schema.js";
-import { requireAuth } from "../auth/middleware.js";
+import { requireAuth, requireTenantAdmin } from "../auth/middleware.js";
 import { ingestContent, reindexContent } from "../ai/ingestion.js";
 import { pool } from "../infra/db.js";
 import type { AIProvider } from "../ai/provider.js";
@@ -45,6 +45,7 @@ function composeText(tipo: Tipo, data: PlanoData | FaqData | RegraData | TomData
 export function createKnowledgeRoutes(provider: AIProvider) {
   return async function knowledgeRoutes(app: FastifyInstance) {
     app.addHook("preHandler", requireAuth);
+    app.addHook("preHandler", requireTenantAdmin);
 
     function resolveTenantId(req: import("fastify").FastifyRequest): string | null {
       const user = req.user!;

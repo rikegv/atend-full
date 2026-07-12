@@ -5,10 +5,11 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import KnowledgeBasePage from "./pages/KnowledgeBasePage";
 import AcademiasPage from "./pages/AcademiasPage";
+import EquipePage from "./pages/EquipePage";
+import AtendentePlaceholder from "./pages/AtendentePlaceholder";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -16,29 +17,39 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
+  if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
 function GuestRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-
   if (loading) return null;
   if (user) return <Navigate to="/" replace />;
-
   return <>{children}</>;
 }
 
 function SuperAdminRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  if (user?.role !== "SUPER_ADMIN") {
-    return <Navigate to="/" replace />;
-  }
+  if (user?.role !== "SUPER_ADMIN") return <Navigate to="/" replace />;
   return <>{children}</>;
+}
+
+function TenantAdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (user?.role !== "TENANT_ADMIN") return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (user?.role === "ATENDENTE") return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function IndexPage() {
+  const { user } = useAuth();
+  if (user?.role === "ATENDENTE") return <AtendentePlaceholder />;
+  return <DashboardPage />;
 }
 
 export default function App() {
@@ -46,29 +57,15 @@ export default function App() {
     <Routes>
       <Route
         path="/login"
-        element={
-          <GuestRoute>
-            <LoginPage />
-          </GuestRoute>
-        }
+        element={<GuestRoute><LoginPage /></GuestRoute>}
       />
       <Route
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
+        element={<ProtectedRoute><AppLayout /></ProtectedRoute>}
       >
-        <Route index element={<DashboardPage />} />
-        <Route path="base" element={<KnowledgeBasePage />} />
-        <Route
-          path="academias"
-          element={
-            <SuperAdminRoute>
-              <AcademiasPage />
-            </SuperAdminRoute>
-          }
-        />
+        <Route index element={<IndexPage />} />
+        <Route path="base" element={<AdminRoute><KnowledgeBasePage /></AdminRoute>} />
+        <Route path="academias" element={<SuperAdminRoute><AcademiasPage /></SuperAdminRoute>} />
+        <Route path="equipe" element={<TenantAdminRoute><EquipePage /></TenantAdminRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

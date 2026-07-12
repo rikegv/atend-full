@@ -42,6 +42,15 @@ export async function requireSuperAdmin(req: FastifyRequest, reply: FastifyReply
   }
 }
 
+export async function requireTenantAdmin(req: FastifyRequest, reply: FastifyReply) {
+  if (!req.user) {
+    return reply.status(401).send({ error: "Não autenticado" });
+  }
+  if (req.user.role === "ATENDENTE") {
+    return reply.status(403).send({ error: "Acesso restrito a administradores" });
+  }
+}
+
 export function enforceTenantIsolation(
   req: FastifyRequest,
   tenantId: string,
