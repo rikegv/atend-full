@@ -31,17 +31,18 @@ export interface KnowledgeItem {
   updatedAt: string;
 }
 
-function headers() {
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${getStoredToken()}`,
-  };
+function authHeaders() {
+  return { Authorization: `Bearer ${getStoredToken()}` };
+}
+
+function jsonHeaders() {
+  return { ...authHeaders(), "Content-Type": "application/json" };
 }
 
 export async function listItems(tipo: Tipo, tenantId?: string): Promise<KnowledgeItem[]> {
   const qs = tenantId ? `?tenantId=${tenantId}` : "";
   const res = await fetch(`${API_BASE}/knowledge/${tipo}${qs}`, {
-    headers: headers(),
+    headers: authHeaders(),
   });
   if (!res.ok) throw new Error("Erro ao listar itens");
   return res.json();
@@ -55,7 +56,7 @@ export async function createItem(
   const qs = tenantId ? `?tenantId=${tenantId}` : "";
   const res = await fetch(`${API_BASE}/knowledge/${tipo}${qs}`, {
     method: "POST",
-    headers: headers(),
+    headers: jsonHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -74,7 +75,7 @@ export async function updateItem(
   const qs = tenantId ? `?tenantId=${tenantId}` : "";
   const res = await fetch(`${API_BASE}/knowledge/${tipo}/${id}${qs}`, {
     method: "PUT",
-    headers: headers(),
+    headers: jsonHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Erro ao atualizar item");
@@ -85,7 +86,7 @@ export async function deleteItem(tipo: Tipo, id: string, tenantId?: string): Pro
   const qs = tenantId ? `?tenantId=${tenantId}` : "";
   const res = await fetch(`${API_BASE}/knowledge/${tipo}/${id}${qs}`, {
     method: "DELETE",
-    headers: headers(),
+    headers: authHeaders(),
   });
   if (!res.ok) throw new Error("Erro ao excluir item");
 }
