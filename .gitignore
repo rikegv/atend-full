@@ -3,9 +3,10 @@ dist/
 .env
 *.log
 
-# WhatsApp session files (futuro)
+# WhatsApp session files
 .wwebjs_auth/
 .wwebjs_cache/
 sessions/
+baileys_auth/
 
 vertex-credentials.json
